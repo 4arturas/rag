@@ -1,28 +1,28 @@
 // Model constants
-export const EMBEDDING_MODEL = "mxbai-embed-large";
-export const AGENT_MODEL = "llama3.2:3b";
-export const GENERATION_MODEL = "deepseek-r1:8b";
+export const MODEL_EMBEDDING = "mxbai-embed-large";
+export const MODEL_AGENT = "llama3.2:3b";
+export const MODEL_GENERATION = "deepseek-r1:8b";
 
 // Node names
-export const AGENT_NODE = "agent";
-export const RETRIEVE_NODE = "retrieve";
-export const RELEVANCE_NODE = "assessRelevance";
-export const QUERY_TRANSFORM_NODE = "transformQuery";
-export const GENERATE_NODE = "generate";
+export const NODE_AGENT = "agent";
+export const NODE_RETRIEVE = "retrieve";
+export const NODE_RELEVANCE = "gradeRelevance";
+export const NODE_QUERY_TRANSFORM = "transformQuery";
+export const NODE_GENERATE = "generate";
 
 // Tool names
-export const RETRIEVER_TOOL_NAME = "retrieve_blog_posts";
-export const GRADE_TOOL_NAME = "give_relevance_score";
+export const TOOL_RETRIEVER = "retrieve_blog_posts";
+export const TOOL_GRADE = "give_relevance_score";
 
 // Decision constants
-export const RELEVANT = "yes";
-export const NOT_RELEVANT = "no";
+export const DECISION_RELEVANT = "yes";
+export const DECISION_NOT_RELEVANT = "no";
 
 // Prompts
 const relevantValue = "yes";
 const notRelevantValue = "no";
 
-export const RELEVANCE_PROMPT_TEMPLATE = `You are a grader assessing relevance of retrieved docs to a user question.
+export const PROMPT_RELEVANCE = `You are a grader assessing relevance of retrieved docs to a user question.
 Here are the retrieved docs:
 
 -------
@@ -38,7 +38,7 @@ Give a binary score '${relevantValue}' or '${notRelevantValue}' score to indicat
 ${relevantValue}: The docs are relevant to the question.
 ${notRelevantValue}: The docs are not relevant to the question.`;
 
-export const REWRITE_PROMPT_TEMPLATE = `Look at the input and try to reason about the underlying semantic intent / meaning.
+export const PROMPT_TRANSFORM = `Look at the input and try to reason about the underlying semantic intent / meaning.
 
 Here is the initial question:
 
@@ -50,7 +50,7 @@ Here is the initial question:
 
 Formulate an improved question:`;
 
-export const GENERATE_PROMPT_TEMPLATE = `You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise.
+export const PROMPT_GENERATE = `You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise.
 
 Here is the initial question:
 

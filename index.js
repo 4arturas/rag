@@ -14,21 +14,21 @@ import { END, StateGraph } from "@langchain/langgraph";
 import { z } from "zod";
 import { HumanMessage } from "@langchain/core/messages";
 import {
-  EMBEDDING_MODEL,
-  AGENT_MODEL,
-  GENERATION_MODEL,
-  AGENT_NODE,
-  RETRIEVE_NODE,
-  RELEVANCE_NODE,
-  QUERY_TRANSFORM_NODE,
-  GENERATE_NODE,
-  RETRIEVER_TOOL_NAME,
-  GRADE_TOOL_NAME,
-  RELEVANCE_PROMPT_TEMPLATE,
-  REWRITE_PROMPT_TEMPLATE,
-  GENERATE_PROMPT_TEMPLATE,
-  RELEVANT,
-  NOT_RELEVANT
+  MODEL_EMBEDDING,
+  MODEL_AGENT,
+  MODEL_GENERATION,
+  NODE_AGENT,
+  NODE_RETRIEVE,
+  NODE_RELEVANCE,
+  NODE_QUERY_TRANSFORM,
+  NODE_GENERATE,
+  TOOL_RETRIEVER,
+  TOOL_GRADE,
+  PROMPT_RELEVANCE,
+  PROMPT_TRANSFORM,
+  PROMPT_GENERATE,
+  DECISION_RELEVANT,
+  DECISION_NOT_RELEVANT
 } from "./constants.js";
 
 const urls = [
@@ -41,7 +41,7 @@ async function main() {
   console.log("Starting RAG Agent with functions...");
 
   const embeddings = new OllamaEmbeddings({
-    model: EMBEDDING_MODEL,
+    model: MODEL_EMBEDDING,
   });
 
 
@@ -69,7 +69,7 @@ async function main() {
   });
 
   const tool = new DynamicTool({
-    name: RETRIEVER_TOOL_NAME,
+    name: TOOL_RETRIEVER,
     description: "Search and return information about Deno from various blog posts.",
     func: async (query) => {
       const docs = await retriever.invoke(query);
@@ -85,13 +85,13 @@ async function main() {
     const { messages } = state;
     const filteredMessages = messages.filter((message) => {
       if (isAIMessage(message) && message.tool_calls?.length) {
-        return message.tool_calls[0].name !== GRADE_TOOL_NAME;
+        return message.tool_calls[0].name !== TOOL_GRADE;
       }
       return true;
     });
 
     const model = new ChatOllama({
-      model: AGENT_MODEL,
+      model: MODEL_AGENT,
       temperature: 0,
       streaming: true,
     });
@@ -110,27 +110,27 @@ async function main() {
 
     if (isAIMessage(lastMessage) && lastMessage.tool_calls?.length) {
       console.log("---DECISION: RETRIEVE---");
-      return RETRIEVE_NODE;
+      return NODE_RETRIEVE;
     }
 
     return END;
   };
 
-  const assessDocumentRelevance = async (state) => {
-    console.log("---ASSESS RELEVANCE---");
+  const gradeDocumentRelevance = async (state) => {
+    console.log("---GRADE RELEVANCE---");
 
     const toolSchema = {
-      name: GRADE_TOOL_NAME,
-      description: "Give a relevance score to the retrieved documents.",
+      name: TOOL_GRADE,
+      description: "Grade document relevance with a binary score (yes/no).",
       schema: z.object({
-        binaryScore: z.string().describe(`Relevance score '${RELEVANT}' or '${NOT_RELEVANT}'`),
+        binaryScore: z.string().describe(`Relevance score '${DECISION_RELEVANT}' or '${DECISION_NOT_RELEVANT}'`),
       }),
     };
 
-    const prompt = ChatPromptTemplate.fromTemplate(RELEVANCE_PROMPT_TEMPLATE);
+    const prompt = ChatPromptTemplate.fromTemplate(PROMPT_RELEVANCE);
 
-    const model = new ChatOllama({
-      model: AGENT_MODEL,
+    const llmWithTools = new ChatOllama({
+      model: MODEL_AGENT,
       temperature: 0,
     }).bindTools([toolSchema]);
 
@@ -138,9 +138,7 @@ async function main() {
     const question = messages[0].content;
     const context = messages[messages.length-1].content;
 
-    const chain = prompt.pipe(model);
-
-    const score = await chain.invoke({
+    const score = await prompt.pipe(llmWithTools).invoke({
       question,
       context,
     });
@@ -168,9 +166,9 @@ async function main() {
       );
     }
 
-    const relevant = toolCalls[0].args.binaryScore === RELEVANT;
+    const relevant = toolCalls[0].args.binaryScore === DECISION_RELEVANT;
     console.log(`---DECISION: DOCS ${relevant ? "" : "NOT "} RELEVANT---`);
-    return relevant ? RELEVANT : NOT_RELEVANT;
+    return relevant ? DECISION_RELEVANT : DECISION_NOT_RELEVANT;
   };
 
   const transformQuery = async (state) => {
@@ -178,10 +176,10 @@ async function main() {
 
     const { messages } = state;
     const question = messages[0].content;
-    const prompt = ChatPromptTemplate.fromTemplate(REWRITE_PROMPT_TEMPLATE);
+    const prompt = ChatPromptTemplate.fromTemplate(PROMPT_TRANSFORM);
 
     const model = new ChatOllama({
-      model: GENERATION_MODEL,
+      model: MODEL_GENERATION,
       temperature: 0,
       streaming: true,
     });
@@ -196,7 +194,6 @@ async function main() {
 
     const { messages } = state;
     const question = messages[0].content;
-    // Extract the most recent ToolMessage
     const lastToolMessage = messages.slice().reverse().find((msg) =>
       isToolMessage(msg)
     );
@@ -206,17 +203,15 @@ async function main() {
 
     const context = lastToolMessage.content;
 
-    const prompt = ChatPromptTemplate.fromTemplate(GENERATE_PROMPT_TEMPLATE);
+    const prompt = ChatPromptTemplate.fromTemplate(PROMPT_GENERATE);
 
     const llm = new ChatOllama({
-      model: GENERATION_MODEL,
+      model: MODEL_GENERATION,
       temperature: 0,
       streaming: true,
     });
 
-    const ragChain = prompt.pipe(llm);
-
-    const response = await ragChain.invoke({
+    const response = await prompt.pipe(llm).invoke({
       context,
       question,
     });
@@ -235,35 +230,35 @@ async function main() {
 
   const toolNode = new ToolNode(tools);
   const workflow = new StateGraph(GraphState)
-    .addNode(AGENT_NODE, callAgent)
-    .addNode(RETRIEVE_NODE, toolNode)
-    .addNode(RELEVANCE_NODE, assessDocumentRelevance)
-    .addNode(QUERY_TRANSFORM_NODE, transformQuery)
-    .addNode(GENERATE_NODE, generate);
+    .addNode(NODE_AGENT, callAgent)
+    .addNode(NODE_RETRIEVE, toolNode)
+    .addNode(NODE_RELEVANCE, gradeDocumentRelevance)
+    .addNode(NODE_QUERY_TRANSFORM, transformQuery)
+    .addNode(NODE_GENERATE, generate);
 
   // Add edges and conditional edges
-  workflow.addEdge("__start__", AGENT_NODE);
+  workflow.addEdge("__start__", NODE_AGENT);
 
   // Decide whether to retrieve
   workflow.addConditionalEdges(
-    AGENT_NODE,
+    NODE_AGENT,
     decideToRetrieveDocuments,
   );
 
-  workflow.addEdge(RETRIEVE_NODE, RELEVANCE_NODE);
+  workflow.addEdge(NODE_RETRIEVE, NODE_RELEVANCE);
 
   // Edges taken after the `action' node is called.
   workflow.addConditionalEdges(
-    RELEVANCE_NODE,
+    NODE_RELEVANCE,
     checkDocumentRelevance,
     {
-      [RELEVANT]: GENERATE_NODE,
-      [NOT_RELEVANT]: QUERY_TRANSFORM_NODE,
+      [DECISION_RELEVANT]: NODE_GENERATE,
+      [DECISION_NOT_RELEVANT]: NODE_QUERY_TRANSFORM,
     },
   );
 
-  workflow.addEdge(GENERATE_NODE, "__end__");
-  workflow.addEdge(QUERY_TRANSFORM_NODE, AGENT_NODE);
+  workflow.addEdge(NODE_GENERATE, "__end__");
+  workflow.addEdge(NODE_QUERY_TRANSFORM, NODE_AGENT);
 
   const app = workflow.compile();
   console.log("RAG Agent is ready. Starting execution...");
