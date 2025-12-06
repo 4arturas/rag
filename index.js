@@ -4,12 +4,11 @@ import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
 import { Annotation } from "@langchain/langgraph";
-import { BaseMessage } from "@langchain/core/messages";
+import { BaseMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
 import { DynamicTool } from "@langchain/core/tools";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatOllama } from "@langchain/ollama";
-import { isAIMessage, isToolMessage } from "@langchain/core/messages";
 import { END, StateGraph } from "@langchain/langgraph";
 import { z } from "zod";
 import { HumanMessage } from "@langchain/core/messages";
@@ -84,7 +83,7 @@ async function main() {
 
     const { messages } = state;
     const filteredMessages = messages.filter((message) => {
-      if (isAIMessage(message) && message.tool_calls?.length) {
+      if (message instanceof AIMessage && message.tool_calls?.length) {
         return message.tool_calls[0].name !== TOOL_GRADE;
       }
       return true;
@@ -108,7 +107,7 @@ async function main() {
     const { messages } = state;
     const lastMessage = messages[messages.length - 1];
 
-    if (isAIMessage(lastMessage) && lastMessage.tool_calls?.length) {
+    if (lastMessage instanceof AIMessage && lastMessage.tool_calls?.length) {
       console.log("---DECISION: RETRIEVE---");
       return NODE_RETRIEVE;
     }
@@ -153,7 +152,7 @@ async function main() {
 
     const { messages } = state;
     const lastMessage = messages[messages.length - 1];
-    if (!isAIMessage(lastMessage)) {
+    if (!(lastMessage instanceof AIMessage)) {
       throw new Error(
         "The 'checkDocumentRelevance' node requires the most recent message to be an AI message.",
       );
@@ -195,7 +194,7 @@ async function main() {
     const { messages } = state;
     const question = messages[0].content;
     const lastToolMessage = messages.slice().reverse().find((msg) =>
-      isToolMessage(msg)
+      msg instanceof ToolMessage
     );
     if (!lastToolMessage) {
       throw new Error("No tool message found in the conversation history");
