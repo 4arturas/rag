@@ -7,7 +7,7 @@ export const MODEL_GENERATION = "deepseek-r1:8b";
 export const NODE_AGENT = "agent";
 export const NODE_RETRIEVE = "retrieve";
 export const NODE_RELEVANCE = "gradeRelevance";
-export const NODE_QUERY_TRANSFORM = "transformQuery";
+export const NODE_TRANSFORM = "transformQuery";
 export const NODE_GENERATE = "generate";
 
 // Tool names

@@ -19,7 +19,7 @@ import {
     NODE_AGENT,
     NODE_RETRIEVE,
     NODE_RELEVANCE,
-    NODE_QUERY_TRANSFORM,
+    NODE_TRANSFORM,
     NODE_GENERATE,
     TOOL_RETRIEVER,
     TOOL_GRADE,
@@ -43,7 +43,6 @@ async function main() {
         model: MODEL_EMBEDDING,
     });
 
-
     const docs = await Promise.all(
         urls.map((url) => new CheerioWebBaseLoader(url).load()),
     );
@@ -57,12 +56,10 @@ async function main() {
     const allSplits = await splitter.splitDocuments(docsList);
     console.log(`Split blog posts into ${allSplits.length} sub-documents.`);
 
-    // Create vector store and retriever
     const vectorStore = await HNSWLib.fromDocuments(
         allSplits,
         embeddings,
     );
-    // const retriever = vectorStore.asRetriever();
     const retriever = vectorStore.asRetriever({
         k: 2, // a higher k value will provide more context, but will slow down the query
     });
@@ -232,7 +229,7 @@ async function main() {
         .addNode(NODE_AGENT, callAgent)
         .addNode(NODE_RETRIEVE, toolNode)
         .addNode(NODE_RELEVANCE, gradeDocumentRelevance)
-        .addNode(NODE_QUERY_TRANSFORM, transformQuery)
+        .addNode(NODE_TRANSFORM, transformQuery)
         .addNode(NODE_GENERATE, generate);
 
     // Add edges and conditional edges
@@ -252,25 +249,23 @@ async function main() {
         checkDocumentRelevance,
         {
             [DECISION_RELEVANT]: NODE_GENERATE,
-            [DECISION_NOT_RELEVANT]: NODE_QUERY_TRANSFORM,
+            [DECISION_NOT_RELEVANT]: NODE_TRANSFORM,
         },
     );
 
     workflow.addEdge(NODE_GENERATE, "__end__");
-    workflow.addEdge(NODE_QUERY_TRANSFORM, NODE_AGENT);
+    workflow.addEdge(NODE_TRANSFORM, NODE_AGENT);
 
     const app = workflow.compile();
     console.log("RAG Agent is ready. Starting execution...");
     console.log("Question: What are some new features of Deno 2.1?");
 
-    // Prepare input
     const inputs = {
         messages: [
             new HumanMessage("What are some new features of Deno 2.1?"),
         ],
     };
 
-    // Run the workflow
     let finalState;
     for await (const output of await app.stream(inputs)) {
         for (const [key, value] of Object.entries(output)) {
