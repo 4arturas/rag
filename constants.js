@@ -18,10 +18,6 @@ export const TOOL_GRADE = "give_relevance_score";
 export const DECISION_RELEVANT = "yes";
 export const DECISION_NOT_RELEVANT = "no";
 
-// Prompts
-const relevantValue = "yes";
-const notRelevantValue = "no";
-
 export const PROMPT_RELEVANCE = `You are a grader assessing relevance of retrieved docs to a user question.
 Here are the retrieved docs:
 
@@ -34,9 +30,9 @@ Here are the retrieved docs:
 Here is the user question: {question}
 
 If the content of the docs are relevant to the users question, score them as relevant.
-Give a binary score '${relevantValue}' or '${notRelevantValue}' score to indicate whether the docs are relevant to the question.
-${relevantValue}: The docs are relevant to the question.
-${notRelevantValue}: The docs are not relevant to the question.`;
+Give a binary score '${DECISION_RELEVANT}' or '${DECISION_NOT_RELEVANT}' score to indicate whether the docs are relevant to the question.
+${DECISION_RELEVANT}: The docs are relevant to the question.
+${DECISION_NOT_RELEVANT}: The docs are not relevant to the question.`;
 
 export const PROMPT_TRANSFORM = `Look at the input and try to reason about the underlying semantic intent / meaning.
 

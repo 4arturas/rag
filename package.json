@@ -19,13 +19,15 @@
   "author": "Qwen Code",
   "license": "MIT",
   "dependencies": {
-    "@langchain/community": "^1.0.4",
-    "@langchain/core": "^1.0.6",
-    "@langchain/langgraph": "^1.0.2",
-    "@langchain/ollama": "^1.0.1",
-    "cheerio": "^1.0.0-rc.12",
+    "@langchain/classic": "^1.0.6",
+    "@langchain/community": "^1.1.0",
+    "@langchain/core": "^1.1.5",
+    "@langchain/langgraph": "^1.0.4",
+    "@langchain/ollama": "^1.1.0",
+    "cheerio": "^1.1.2",
     "hnswlib-node": "^3.0.0",
-    "langchain": "^1.0.6",
+    "langchain": "^1.0.0-alpha.9",
+    "langsmith": "^0.3.87",
     "zod": "^3.23.8",
     "zod-to-json-schema": "^3.25.0"
   }
