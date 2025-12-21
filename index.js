@@ -29,6 +29,7 @@ import {
     DECISION_RELEVANT,
     DECISION_NOT_RELEVANT
 } from "./constants.js";
+import {visualize} from "./workflow-visualizer.js";
 
 const urls = [
     "https://deno.com/blog/not-using-npm-specifiers-doing-it-wrong",
@@ -256,7 +257,10 @@ async function main() {
     workflow.addEdge(NODE_GENERATE, "__end__");
     workflow.addEdge(NODE_TRANSFORM, NODE_AGENT);
 
+
     const app = workflow.compile();
+    visualize(app);
+
     console.log("RAG Agent is ready. Starting execution...");
     console.log("Question: What are some new features of Deno 2.1?");
 
