@@ -74,8 +74,8 @@ async function main() {
 
     const agentInputs = {
         messages: [
-            {role: "user", content: inputMessage}
-        ]
+            new HumanMessage(inputMessage),
+        ],
     };
 
     const stream = await agent.stream(
