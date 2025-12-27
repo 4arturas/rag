@@ -2,6 +2,9 @@
 export const MODEL_EMBEDDING = "mxbai-embed-large";
 export const MODEL_AGENT = "llama3.2:3b";
 export const MODEL_GENERATION = "deepseek-r1:8b";
+export const MODEL_GEMMA3 = "gemma3:4b";
+export const MODEL_MINISTRAL3 = "ministral-3:8b";
+export const MODEL_QWEN = "qwen2.5:7b";
 
 // Node names
 export const NODE_AGENT = "agent";

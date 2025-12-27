@@ -24,6 +24,7 @@
     "@langchain/core": "^1.1.5",
     "@langchain/langgraph": "^1.0.4",
     "@langchain/ollama": "^1.1.0",
+    "axios": "^1.13.2",
     "cheerio": "^1.1.2",
     "hnswlib-node": "^3.0.0",
     "langchain": "^1.0.0-alpha.9",
