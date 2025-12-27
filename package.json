@@ -24,11 +24,14 @@
     "@langchain/core": "^1.1.5",
     "@langchain/langgraph": "^1.0.4",
     "@langchain/ollama": "^1.1.0",
+    "@tavily/core": "^0.6.3",
     "axios": "^1.13.2",
     "cheerio": "^1.1.2",
     "hnswlib-node": "^3.0.0",
     "langchain": "^1.0.0-alpha.9",
     "langsmith": "^0.3.87",
+    "tavily": "^1.0.2",
+    "turndown": "^7.2.2",
     "zod": "^3.23.8",
     "zod-to-json-schema": "^3.25.0"
   }
