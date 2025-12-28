@@ -39,7 +39,7 @@ async function classifyIntent(state) {
     Analyze this customer email and classify it:
     Email: ${state.emailContent}
     From: ${state.senderEmail}
-    Provide classification.
+    Provide classification, including intent, urgency, topic, and summary.
     `;
 
     const classification = await structuredLlm.invoke(classificationPrompt);
