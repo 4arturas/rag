@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>PRD Input - Todo Generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/antd/5.26.5/reset.min.css"/>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        .app-container {
+            width: 100%;
+            min-height: 100vh;
+            background: white;
+            padding: 24px;
+        }
+        .header-container {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            margin-bottom: 24px;
+        }
+        .content-container {
+            padding: 0 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .task-table-container {
+            background: #fafafa;
+            padding: 24px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        table { width: 100%; border-collapse: collapse; border: 1px solid #f0f0f0; }
+        th { background-color: #fafafa; padding: 12px; text-align: left; border-bottom: 1px solid #f0f0f0; font-weight: 600; }
+        td { padding: 12px; border-bottom: 1px solid #f0f0f0; }
+        tr:hover { background-color: #fafafa; }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/antd/5.26.7/antd.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+    const boilerplateCode = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>React + Ant Design – full-screen tabs</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/antd/5.26.5/reset.min.css"/>
+    <style>body{padding:30px}</style>
+
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"><\/script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"><\/script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"><\/script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"><\/script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/antd/5.26.7/antd.min.js"><\/script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+    const { createContext, useContext, useState } = React;
+    const { Button, Tabs } = antd;
+
+    const AppContext = createContext({});
+
+    function Counter() {
+        const { globalCount, setGlobalCount } = useContext(AppContext);
+
+        return (
+            <div style={{ padding: 20 }}>
+                <h2>Counter Component</h2>
+                <p>Global count: <strong>{globalCount}</strong></p>
+                <Button type="primary" onClick={() => setGlobalCount(c => c + 1)} style={{ marginRight: 8 }}>+</Button>
+                <Button type="default" onClick={() => setGlobalCount(c => c - 1)} style={{ marginRight: 8 }}>−</Button>
+                <Button type="dashed" onClick={() => setGlobalCount(0)}>Reset</Button>
+            </div>
+        );
+    }
+
+    function App() {
+        const [activeTabKey, setActiveTabKey] = useState("2");
+        const [globalCount, setGlobalCount] = useState(0);
+
+        return (
+            <AppContext.Provider value={{ globalCount, setGlobalCount }}>
+                <Tabs activeKey={activeTabKey} onChange={setActiveTabKey}>
+                    <Tabs.TabPane tab="Hello Tab 1" key="1">
+                        <div>Hello 2 {globalCount}</div>
+                    </Tabs.TabPane>
+                    <Tabs.TabPane tab="Counter" key="2">
+                        <Counter/>
+                    </Tabs.TabPane>
+                </Tabs>
+            </AppContext.Provider>
+        );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+<\/script>
+</body>
+</html>
+    `;
+
+    const { createContext, useContext, useState, useEffect } = React;
+    const { Input, Button, Space, Typography, List, Card, Tag, message, Spin, Modal, Tooltip } = antd;
+    const { TextArea } = Input;
+    const { Title, Text } = Typography;
+
+    const AppContext = createContext({});
+
+    async function generateTasksFromBackend(prdText) {
+        const response = await fetch('/generate-tasks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prd: prdText })
+        });
+
+        if (!response.ok) throw new Error('Task generation failed');
+        const result = await response.json();
+        return result.tasks || [];
+    }
+
+    function PrdInput() {
+        const { prdText, setPrdText, loading, setLoading, setTasks } = useContext(AppContext);
+
+        const handleSubmit = async () => {
+            setLoading(true);
+            try {
+                const data = await generateTasksFromBackend(prdText);
+                setTasks(data);
+                message.success('Tasks generated successfully!');
+            } catch (error) {
+                console.error('Error:', error);
+                message.error('Failed to generate tasks.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        return (
+            <div style={{ padding: '20px 0' }}>
+                <Title level={4}>Product Requirements Document (PRD) Input</Title>
+                <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                    <TextArea
+                        rows={8}
+                        placeholder="Paste your PRD here..."
+                        value={prdText}
+                        onChange={(e) => setPrdText(e.target.value)}
+                        style={{ fontSize: '14px', borderRadius: '4px' }}
+                    />
+                    <Button
+                        type="primary"
+                        size="large"
+                        onClick={handleSubmit}
+                        disabled={!prdText.trim() || loading}
+                        loading={loading}
+                        block
+                    >
+                        {loading ? 'Analyzing PRD...' : 'Generate Task List'}
+                    </Button>
+                </Space>
+            </div>
+        );
+    }
+
+    function TaskList() {
+        const { tasks, setTasks, implementingTaskId, setImplementingTaskId } = useContext(AppContext);
+        const [selectedTask, setSelectedTask] = useState(null);
+        const [modalVisible, setModalVisible] = useState(false);
+
+        if (tasks.length === 0) return null;
+
+        const handleUpdateStatus = (record) => {
+            setImplementingTaskId(record.id);
+
+            fetch('/implement-task', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ taskId: record.id })
+            })
+                .then(async response => {
+                    if (!response.ok) throw new Error('Implementation failed');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        setTasks(data.updatedTasks);
+                        message.success(`Task "${record.title}" implemented!`);
+                    }
+                })
+                .catch(error => {
+                    message.error(`Error: ${error.message}`);
+                })
+                .finally(() => {
+                    setImplementingTaskId(null);
+                });
+        };
+
+        const showTaskDetails = (task) => {
+            setSelectedTask(task);
+            setModalVisible(true);
+        };
+
+        const columns = [
+            { title: 'ID', dataIndex: 'id', key: 'id' },
+            {
+                title: 'Title',
+                dataIndex: 'title',
+                key: 'title',
+                render: (title, record) => (
+                    <a onClick={() => showTaskDetails(record)} style={{ fontWeight: 'bold', color: '#1890ff' }}>
+                        {title}
+                    </a>
+                )
+            },
+            {
+                title: 'Priority',
+                dataIndex: 'priority',
+                key: 'priority',
+                render: (p) => <Tag color={p === 'high' ? 'red' : 'blue'}>{p.toUpperCase()}</Tag>
+            },
+            {
+                title: 'Dependencies',
+                dataIndex: 'dependencies',
+                key: 'dependencies',
+                render: (deps) => (
+                    <Space size={[0, 4]} wrap>
+                        {deps && deps.length > 0 ? (
+                            deps.map(depId => (
+                                <Tag key={depId} style={{ fontSize: '10px' }}>
+                                    #{depId}
+                                </Tag>
+                            ))
+                        ) : (
+                            <Text type="secondary" style={{ fontSize: '12px' }}>None</Text>
+                        )}
+                    </Space>
+                )
+            },
+            {
+                title: 'Status',
+                dataIndex: 'status',
+                key: 'status',
+                render: (s) => <Tag color={s === 'completed' ? 'green' : 'orange'}>{s.toUpperCase()}</Tag>
+            },
+            {
+                title: 'Action',
+                key: 'action',
+                render: (_, record) => {
+                    const isCompleted = record.status === 'completed';
+                    const isCurrentImplementing = implementingTaskId === record.id;
+                    const isDisabled = isCompleted || (implementingTaskId !== null);
+
+                    return (
+                        <Button
+                            type={isCompleted ? "default" : "primary"}
+                            size="small"
+                            disabled={isDisabled}
+                            loading={isCurrentImplementing}
+                            onClick={() => handleUpdateStatus(record)}
+                        >
+                            {isCompleted ? 'Done' : (isCurrentImplementing ? 'Processing' : 'Implement')}
+                        </Button>
+                    );
+                }
+            }
+        ];
+
+        return (
+            <>
+                <Title level={4}>Development Backlog ({tasks.length} tasks)</Title>
+                <table>
+                    <thead>
+                    <tr>
+                        {columns.map(col => <th key={col.key}>{col.title}</th>)}
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {tasks.map(task => (
+                        <tr key={task.id}>
+                            {columns.map(col => (
+                                <td key={`${task.id}-${col.key}`}>
+                                    {col.render ? col.render(task[col.dataIndex], task) : task[col.dataIndex]}
+                                </td>
+                            ))}
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
+
+                <Modal
+                    title={`Task Details: ${selectedTask?.title}`}
+                    open={modalVisible}
+                    onCancel={() => setModalVisible(false)}
+                    footer={[<Button key="close" onClick={() => setModalVisible(false)}>Close</Button>]}
+                    width={800}
+                >
+                    {selectedTask && (
+                        <pre style={{ background: '#f5f5f5', padding: '16px', borderRadius: '4px', overflow: 'auto' }}>
+                            {JSON.stringify(selectedTask, null, 2)}
+                        </pre>
+                    )}
+                </Modal>
+            </>
+        );
+    }
+
+    function App() {
+        const defaultPrd = `Project: Basic Task Tracker
+Core Features:
+1. Add tasks
+2. View tasks
+3. Delete tasks
+Tech Stack: React, AntD Design, Do not use redux for memory, one html page implementation.
+!!! IMPORTANT !!! Application must be one html page implementation.
+!!! IMPORTANT !!! Application must be based on this boilerplate code:
+${boilerplateCode}
+`;
+
+        const [prdText, setPrdText] = useState(defaultPrd);
+        const [tasks, setTasks] = useState([]);
+        const [loading, setLoading] = useState(false);
+        const [implementingTaskId, setImplementingTaskId] = useState(null);
+
+        useEffect(() => {
+            fetch('/tasks.json')
+                .then(res => res.ok ? res.json() : [])
+                .then(data => setTasks(Array.isArray(data) ? data : []))
+                .catch(() => {});
+        }, []);
+
+        return (
+            <AppContext.Provider value={{ prdText, setPrdText, tasks, setTasks, loading, setLoading, implementingTaskId, setImplementingTaskId }}>
+                <div className="app-container">
+                    <div className="content-container">
+                        <PrdInput />
+                        <div className="task-table-container">
+                            <TaskList />
+                        </div>
+                    </div>
+                </div>
+            </AppContext.Provider>
+        );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

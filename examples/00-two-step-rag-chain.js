@@ -5,7 +5,7 @@ import {HNSWLib} from "@langchain/community/vectorstores/hnswlib";
 import {ChatOllama} from "@langchain/ollama";
 import {createAgent, dynamicSystemPromptMiddleware} from "langchain";
 import {SystemMessage} from "@langchain/core/messages";
-import {MODEL_AGENT, MODEL_EMBEDDING} from "./constants.js";
+import {MODEL_AGENT, MODEL_EMBEDDING} from "../constants.js";
 
 const url = "https://lilianweng.github.io/posts/2023-06-23-agent/";
 

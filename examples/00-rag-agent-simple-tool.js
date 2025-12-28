@@ -7,7 +7,7 @@ import {z} from "zod";
 import {tool} from "@langchain/core/tools";
 import {createAgent} from "langchain";
 import {HumanMessage, SystemMessage} from "@langchain/core/messages";
-import {MODEL_AGENT, MODEL_EMBEDDING} from "./constants.js";
+import {MODEL_AGENT, MODEL_EMBEDDING} from "../constants.js";
 
 const url = "https://lilianweng.github.io/posts/2023-06-23-agent/";
 
